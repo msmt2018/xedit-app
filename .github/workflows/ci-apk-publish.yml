@@ -136,16 +136,33 @@ jobs:
       # Install the CMake version defined in libs.versions.toml ([versions] cmake = "...").
       # A trailing "+" (meaning "this version or newer") is stripped, so the plain version is
       # what gets installed. If you pin ndkVersion, add it here too, e.g. "ndk;<version>".
-      - name: Install CMake via sdkmanager
+      # Install every Android SDK component pinned by libs.versions.toml.
+      # This keeps CI aligned with Gradle's compileSdk/buildTools/ndk/CMake settings.
+      - name: Install Android SDK components
         run: |
-          CMAKE_VERSION=$(grep -oP '^cmake\s*=\s*"\K[^"+]+' libs.versions.toml | head -n1)
-          if [ -z "$CMAKE_VERSION" ]; then
-            echo "Could not read cmake version from libs.versions.toml" >&2
-            exit 1
-          fi
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$SDKMANAGER" --licenses > /dev/null || true   # Accept licenses ("yes" exits with SIGPIPE, ignore it)
-          "$SDKMANAGER" "cmake;$CMAKE_VERSION"
+          COMPILE_SDK=$(grep -oP '^compileSdk\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1)
+          BUILD_TOOLS=$(grep -oP '^buildTools\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1)
+          NDK_VERSION=$(grep -oP '^ndk\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1)
+          CMAKE_VERSION=$(grep -oP '^cmake\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1 | sed 's/+.*$//')
+
+          for VALUE in "$COMPILE_SDK" "$BUILD_TOOLS" "$NDK_VERSION" "$CMAKE_VERSION"; do
+            if [ -z "$VALUE" ]; then
+              echo "A required SDK version could not be read from libs.versions.toml" >&2
+              exit 1
+            fi
+          done
+
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" \
+            "platform-tools" \
+            "platforms;android-$COMPILE_SDK" \
+            "build-tools;$BUILD_TOOLS" \
+            "ndk;$NDK_VERSION" \
+            "cmake;$CMAKE_VERSION"
+
+          echo "Installed Android SDK components:"
+          "$SDKMANAGER" --list_installed | grep -E "platform-tools|platforms;android-$COMPILE_SDK|build-tools;$BUILD_TOOLS|ndk;$NDK_VERSION|cmake;$CMAKE_VERSION" || true
 
       - name: Build APK (assemble${{ env.BUILD_TYPE }})
         run: |
