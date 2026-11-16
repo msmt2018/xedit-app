@@ -27,7 +27,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.PathInterpolator
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 
 import androidx.core.content.edit
@@ -64,12 +63,11 @@ import com.google.android.material.R as MaterialR
  *
  * Ctrl and Alt are for the shortcuts of the keymap (keymap.json): latched, the next
  * char of the soft keyboard is a key of a shortcut (Ctrl+S), not
- * typed. The app takes it ([onSymbol], and the editor's textInterceptor) and calls
+ * typed. The editor's textInterceptor handles it and calls
  * [consumeModifiers] after it. Shift goes with them (Ctrl+Shift+F); alone, it makes the next
  * letter a capital, the arrow keys select, and Tab go back as held Tab does.
  *
- * Only Tab stays out at all times: Ctrl, Alt and Shift are folded behind ⌃, so that the
- * symbols keep the row (as the arrow keys are behind their toggle). ⌃ brings them out, and
+ * Only Tab stays out at all times: Ctrl, Alt and Shift are folded behind ⌃. ⌃ brings them out, and
  * they stay out until ⌃ is tapped again: making a shortcut does not fold them, so that
  * Ctrl+C is followed by Ctrl+V without bringing them out again. Held down, ⌃ keeps them out
  * for good ([modifiersPinned], remembered). Folded with one latched, ⌃ says which, in its
