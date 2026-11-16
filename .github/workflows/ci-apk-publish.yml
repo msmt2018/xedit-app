@@ -141,10 +141,10 @@ jobs:
       - name: Install Android SDK components
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          COMPILE_SDK=$(grep -oP '^compileSdk\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1)
-          BUILD_TOOLS=$(grep -oP '^buildTools\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1)
-          NDK_VERSION=$(grep -oP '^ndk\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1)
-          CMAKE_VERSION=$(grep -oP '^cmake\\s*=\\s*"\\K[^"]+' libs.versions.toml | head -n1 | sed 's/+.*$//')
+          COMPILE_SDK=$(grep '^compileSdk' libs.versions.toml | cut -d '"' -f 2)
+          BUILD_TOOLS=$(grep '^buildTools' libs.versions.toml | cut -d '"' -f 2)
+          NDK_VERSION=$(grep '^ndk' libs.versions.toml | cut -d '"' -f 2)
+          CMAKE_VERSION=$(grep '^cmake' libs.versions.toml | cut -d '"' -f 2 | sed 's/+.*$//')
 
           for VALUE in "$COMPILE_SDK" "$BUILD_TOOLS" "$NDK_VERSION" "$CMAKE_VERSION"; do
             if [ -z "$VALUE" ]; then
