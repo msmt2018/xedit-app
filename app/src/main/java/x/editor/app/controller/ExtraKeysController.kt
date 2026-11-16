@@ -20,7 +20,6 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Rect
 import android.os.SystemClock
 import android.transition.AutoTransition
 import android.transition.TransitionManager
@@ -33,9 +32,7 @@ import android.widget.Toast
 
 import androidx.core.content.edit
 import androidx.core.graphics.ColorUtils
-import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.LinearLayoutManager
 
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -44,7 +41,6 @@ import com.google.android.material.color.MaterialColors
 import x.editor.app.AppSettings
 import x.editor.app.Constants
 import x.editor.app.R
-import x.editor.app.adapter.GenericListAdapter
 import x.editor.app.databinding.ActivityEditorBinding
 import x.editor.app.view.CodeEditorView
 import x.github.module.editor.input.CaretMove
@@ -61,14 +57,13 @@ import com.google.android.material.R as MaterialR
  *  | Tab (held) | placeholder before in a snippet, else outdents        | takes the selected item            |
  *  | ⌃          | shows or folds away Ctrl, Alt and Shift; held: stay   | the same                           |
  *  |            | (a shortcut made does not fold them)                  |                                    |
- *  | symbols    | typed as the keyboard types them (pairs may close)    | the same                           |
  *  | ← →        | move the cursor; held, they repeat                    | the list goes, the cursor moves    |
  *  | ↑ ↓        | move the cursor; held, they repeat                    | move through the list              |
  *  | ⤢ / »      | shows or folds away the arrow keys (remembered)       | the same                           |
  *  | Ctrl, Alt, Shift | tap: held for the next key; long press: until tapped; lit while held | the same      |
  *
  * Ctrl and Alt are for the shortcuts of the keymap (keymap.json): latched, the next
- * char of the soft keyboard, or symbol of the row, is a key of a shortcut (Ctrl+S), not
+ * char of the soft keyboard is a key of a shortcut (Ctrl+S), not
  * typed. The app takes it ([onSymbol], and the editor's textInterceptor) and calls
  * [consumeModifiers] after it. Shift goes with them (Ctrl+Shift+F); alone, it makes the next
  * letter a capital, the arrow keys select, and Tab go back as held Tab does.
@@ -85,7 +80,7 @@ import com.google.android.material.R as MaterialR
  * where that is about the color of the text, as the cursor often is), on a tint of it, so
  * that it is seen at a glance that the next key is a shortcut; held, it is underlined too.
  *
- * Folded away, the arrow keys leave their room to the symbols. They come out by
+ * Folded away, the arrow keys stay hidden until requested. They come out by
  * themselves while the completion list is shown (↑ ↓ move through it), and go again a
  * moment after it went: not at once, so that they do not come and go at every key
  * while typing. See [setCompletionActive].
@@ -93,15 +88,13 @@ import com.google.android.material.R as MaterialR
  * While the list is shown, Tab, ↑ and ↓ take the accent color (and Tab the icon of
  * Enter), so it can be seen that they act on the list: see [setCompletionActive].
  *
- * The symbols come from the settings (EditorSettings.extraKeys), the colors from the
- * editor's theme or the app theme ([setColors]).
+ * The colors come from the editor theme or the app theme ([setColors]).
+ * The V2 symbol drawer is hosted separately and is not part of this controller.
  */
 class ExtraKeysController(
     private val binding: ActivityEditorBinding,
     private val activeEditor: () -> CodeEditorView?,
     private val haptic: () -> Unit,
-    /** A symbol of the row tapped: true if the app took it (a key of a shortcut), else typed. */
-    private val onSymbol: (String) -> Boolean = { false },
 ) {
 
     /** Ctrl or Alt of the row: off, held for the next key, or held until tapped again. */
@@ -201,14 +194,7 @@ class ExtraKeysController(
     private var completionActive = false
     private var completionAnimator: ValueAnimator? = null
 
-    private val symbolAdapter = GenericListAdapter<String>(
-        layoutId = R.layout.item_extra_key,
-        idSelector = { it },
-        contentComparator = { old, new -> old == new }
-    )
-
     init {
-        setUpSymbols()
         setUpKeys()
         showArrows(animate = false)
         showModifiers(animate = false)
@@ -234,18 +220,11 @@ class ExtraKeysController(
         afterModifierUsed()
     }
 
-    /** The symbols of the row, in their order. */
-    fun setKeys(keys: List<String>) {
-        symbolAdapter.submitList(keys.toList())
-    }
-
     /** The colors of the row; null for the app theme's. */
     fun setColors(colors: Colors?) {
         customColors = colors
         this.colors = colors ?: themeColors()
         applyColors()
-        @Suppress("NotifyDataSetChanged")
-        symbolAdapter.notifyDataSetChanged()
     }
 
     /**
@@ -284,40 +263,6 @@ class ExtraKeysController(
     // #endregion
 
     // #region keys
-
-    private fun setUpSymbols() {
-        symbolAdapter.onBindView = { holder, symbol ->
-            val label = holder.getView<TextView>(R.id.tv_name)
-            label.text = symbol
-            label.setTextColor(colors.content)
-            (holder.itemView as? MaterialCardView)?.apply {
-                setCardBackgroundColor(colors.key)
-                rippleColor = ColorStateList.valueOf(rippleOf(colors.content))
-                contentDescription = symbol
-            }
-        }
-        // typed as the keyboard types them: a bracket or a quote may close itself
-        symbolAdapter.onItemClick = { _, symbol ->
-            haptic()
-            // with Ctrl or Alt latched (or in a sequence): a key of a shortcut
-            if (!onSymbol(symbol)) activeEditor()?.typeText(symbol)
-        }
-        symbolAdapter.onItemLongClick = { _, symbol ->
-            activeEditor()?.typeText(symbol)
-        }
-        binding.extraKeysList.apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-            adapter = symbolAdapter
-            // the keys are all alike: no animation when the list is replaced
-            itemAnimator = null
-            // A swipe through the symbols that starts at the left or right edge of the
-            // screen is theirs, not the system's back gesture. (The bottom edge cannot be
-            // taken from the system: the row is kept above it, see ImeAnimationInsetsHandler.)
-            addOnLayoutChangeListener { view, left, top, right, bottom, _, _, _, _ ->
-                ViewCompat.setSystemGestureExclusionRects(view, listOf(Rect(0, 0, right - left, bottom - top)))
-            }
-        }
-    }
 
     private fun setUpKeys() {
         // Tab, or the completion; held: one level of indentation less
@@ -533,7 +478,7 @@ class ExtraKeysController(
 
     // #region Ctrl, Alt and Shift folding
 
-    // Ctrl, Alt and Shift shown or not; the symbols take the room they leave
+    // Ctrl, Alt and Shift shown or folded behind their toggle.
     private fun showModifiers(animate: Boolean) {
         val show = modifiersPinned || modifiersOpen
         if (show != modifierGroup.isVisible) {
