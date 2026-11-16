@@ -2485,9 +2485,8 @@ class EditorActivity : BaseActivity() {
         }
     }
 
-    // The row of extra keys over the keyboard: Tab, the symbols of the settings and the
-    // arrow keys, which move through the completion list while it is shown (see
-    // ExtraKeysController). The symbols change with the settings, see applyEditorSettings.
+    // The keyboard helper row: Tab, modifier latches and optional arrow keys.
+    // Symbol entry is provided separately by the V2 drawer below it.
     private fun setUpExtraKeys() {
         val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
         extraKeys = ExtraKeysController(
