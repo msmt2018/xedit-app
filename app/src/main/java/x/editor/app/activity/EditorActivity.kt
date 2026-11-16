@@ -497,8 +497,16 @@ class EditorActivity : BaseActivity() {
         setUpExtraKeys()
         setUpSymbolDrawer()
         
+        binding.extraKeysPanel.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            val measuredHeight = (bottom - top).coerceAtLeast(0)
+            if (measuredHeight != extraKeysHeight && (oldBottom - oldTop) != measuredHeight) {
+                extraKeysHeight = measuredHeight
+                openDocuments.forEach { it.editor?.setMargin(bottomMargin = measuredHeight) }
+            }
+        }
         binding.extraKeysPanel.post {
-            // the bottom margin of the editors: the row of extra keys lies over them
+            // The editor follows the complete keyboard-tools panel, including the
+            // independently expanding V2 symbol drawer.
             extraKeysHeight = binding.extraKeysPanel.height
             openDocuments.forEach { it.editor?.setMargin(bottomMargin = extraKeysHeight) }
         }
