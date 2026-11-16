@@ -196,19 +196,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:key="pref_category_editor_extra_keys"
-        app:title="@string/pref_category_editor_extra_keys">
-
-        <!-- the symbols of the row of extra keys over the keyboard: a dialog with a grid of
-             them to reorder and remove, and a field to add more, see ExtraKeysDialog -->
-        <Preference
-            app:key="pref_editor_extra_keys"
-            app:title="@string/pref_editor_extra_keys_title"
-            app:icon="@drawable/ic_keyboard" />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
         app:key="pref_category_editor_resources"
         app:title="@string/pref_category_editor_resources">
 
