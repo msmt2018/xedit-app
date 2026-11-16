@@ -2370,7 +2370,7 @@ class EditorActivity : BaseActivity() {
                                 Toast.makeText(this, result.cause.message ?: "Symbol action failed", Toast.LENGTH_SHORT).show()
                             }
                             is SymbolActionResult.PartialFailure -> {
-                                Log.e("EditorActivity", "Symbol composite action partially failed", result.cause.toString())
+                                Log.e("EditorActivity", "Symbol composite action partially failed: ${result.cause}")
                                 Toast.makeText(this, "Some steps of the symbol action could not be completed.", Toast.LENGTH_SHORT).show()
                             }
                         }
