@@ -168,6 +168,12 @@ import x.editor.app.view.CascadeMenu
 import x.editor.app.view.CodeEditorView
 import x.editor.app.view.ContentTranslatingDrawerLayout
 import x.editor.app.view.ImeAnimationInsetsHandler
+import x.editor.app.symbol.createCodeEditorSymbolActionHost
+
+import com.zerostudio.idea.widget.editor.symbolinput.v2.SymbolDrawerView
+import com.zerostudio.idea.widget.editor.symbolinput.v2.manager.SymbolDrawerManagerScreen
+import com.zerostudio.idea.widget.editor.symbolinput.v2.settings.SymbolDrawerSettingsScreen
+import com.zerostudio.idea.widget.editor.symbolinput.v2.model.SymbolActionResult
 
 import x.github.module.editor.input.AutoPair
 import x.github.module.editor.input.CommentToggle
@@ -190,6 +196,8 @@ import com.google.android.material.shape.MaterialShapeDrawable
 class EditorActivity : BaseActivity() {
 
     private lateinit var binding: ActivityEditorBinding
+    private var symbolManagerDialog: AlertDialog? = null
+    private var symbolSettingsDialog: AlertDialog? = null
     
     private lateinit var editorService: EditorService
 
@@ -487,6 +495,7 @@ class EditorActivity : BaseActivity() {
         }
 
         setUpExtraKeys()
+        setUpSymbolDrawer()
         
         binding.extraKeysPanel.post {
             // the bottom margin of the editors: the row of extra keys lies over them
@@ -1352,6 +1361,16 @@ class EditorActivity : BaseActivity() {
         // the toolchain's installs go on in the process: the next screen takes them over
         toolchainSheet?.detach()
         toolchainSheet = null
+        symbolManagerDialog?.dismiss()
+        symbolManagerDialog = null
+        symbolSettingsDialog?.dismiss()
+        symbolSettingsDialog = null
+        if (::binding.isInitialized) {
+            binding.symbolDrawer.onSymbolActionListener = null
+            binding.symbolDrawer.onOpenManagerListener = null
+            binding.symbolDrawer.onOpenSettingsListener = null
+            binding.symbolDrawer.onExtensionErrorListener = null
+        }
         // the language servers are shut down
         if (lspControllerCreated) lspController.release()
         super.onDestroy()
@@ -2324,6 +2343,103 @@ class EditorActivity : BaseActivity() {
                 canRedo = ready && editorViewModel.canRedo.value,
                 canSave = ready && !document.isDetached && editorViewModel.isModified.value
             )
+        )
+    }
+
+    private fun setUpSymbolDrawer() {
+        val drawer = binding.symbolDrawer
+        drawer.onSymbolActionListener =
+            SymbolDrawerView.OnSymbolActionListener { symbol, isLongPress ->
+                val action = if (isLongPress) symbol.longAction else symbol.shortAction
+                if (action != null) {
+                    val host = createCodeEditorSymbolActionHost(activeEditor, ::openSymbolManager)
+                    if (host == null) {
+                        Toast.makeText(this, R.string.editor_empty, Toast.LENGTH_SHORT).show()
+                    } else {
+                        when (val result = drawer.executeAction(action, host)) {
+                            SymbolActionResult.Executed,
+                            is SymbolActionResult.Cancelled -> Unit
+                            is SymbolActionResult.Unsupported -> {
+                                Toast.makeText(this, "This symbol action is not supported by the active editor.", Toast.LENGTH_SHORT).show()
+                            }
+                            is SymbolActionResult.Invalid -> {
+                                Toast.makeText(this, result.reason, Toast.LENGTH_SHORT).show()
+                            }
+                            is SymbolActionResult.Failed -> {
+                                Log.e("EditorActivity", "Symbol action failed", result.cause)
+                                Toast.makeText(this, result.cause.message ?: "Symbol action failed", Toast.LENGTH_SHORT).show()
+                            }
+                            is SymbolActionResult.PartialFailure -> {
+                                Log.e("EditorActivity", "Symbol composite action partially failed", result.cause.toString())
+                                Toast.makeText(this, "Some steps of the symbol action could not be completed.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            }
+        drawer.onOpenManagerListener = { openSymbolManager() }
+        drawer.onOpenSettingsListener = { openSymbolSettings() }
+        drawer.onExtensionErrorListener = { extensionId, error ->
+            Log.e("EditorActivity", "Symbol extension failed: $extensionId", error)
+        }
+        drawer.reloadGroups()
+    }
+
+    private fun openSymbolManager(): Boolean {
+        if (symbolManagerDialog?.isShowing == true) return true
+        val drawer = binding.symbolDrawer
+        val screen = SymbolDrawerManagerScreen(
+            context = this,
+            extensionRegistry = drawer.extensions,
+            liveDrawer = drawer
+        ).apply {
+            onError = { error -> Log.e("EditorActivity", "Symbol manager failed", error) }
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setView(screen)
+            .setPositiveButton(android.R.string.ok, null)
+            .create()
+        symbolManagerDialog = dialog
+        dialog.setOnDismissListener {
+            if (symbolManagerDialog === dialog) symbolManagerDialog = null
+            if (!isFinishing && !isDestroyed) drawer.onHostResume()
+        }
+        dialog.show()
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        return true
+    }
+
+    private fun openSymbolSettings() {
+        if (symbolSettingsDialog?.isShowing == true) return
+        val drawer = binding.symbolDrawer
+        val screen = SymbolDrawerSettingsScreen(
+            context = this,
+            extensionRegistry = drawer.extensions
+        ).apply {
+            bindThemeSource(drawer)
+            onSettingsChanged = drawer::applySettings
+            onGroupsChanged = { groups ->
+                drawer.submitGroups(groups, preserveSelectedGroup = true)
+                drawer.saveGroups()
+            }
+            onError = { error -> Log.e("EditorActivity", "Symbol settings failed", error) }
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setView(screen)
+            .setPositiveButton(android.R.string.ok, null)
+            .create()
+        symbolSettingsDialog = dialog
+        dialog.setOnDismissListener {
+            if (symbolSettingsDialog === dialog) symbolSettingsDialog = null
+            if (!isFinishing && !isDestroyed) drawer.onHostResume()
+        }
+        dialog.show()
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
         )
     }
 
