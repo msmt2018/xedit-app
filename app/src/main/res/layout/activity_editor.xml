@@ -198,20 +198,6 @@
 
                     </LinearLayout>
 
-                    <!-- the symbols, from the settings -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/extra_keys_list"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/extra_key_height"
-                        android:layout_weight="1"
-                        android:layout_marginStart="@dimen/extra_key_gap"
-                        android:layout_marginEnd="@dimen/extra_key_gap"
-                        android:clipToPadding="false"
-                        android:fadingEdgeLength="20dp"
-                        android:overScrollMode="never"
-                        android:requiresFadingEdge="horizontal"
-                        android:scrollbars="none"/>
-
                     <!-- the arrow keys, as one group; folded away by the key after it, so
                          that the symbols get the room (out by themselves while the
                          completion list is shown, see ExtraKeysController) -->
