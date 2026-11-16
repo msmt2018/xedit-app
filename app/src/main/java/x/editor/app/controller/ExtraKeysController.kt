@@ -452,8 +452,7 @@ class ExtraKeysController(
     private val arrowsVisible: Boolean
         get() = arrowGroup.isVisible
 
-    // The arrow keys shown or not, as wanted or for the completion list; the symbols
-    // take the room they leave, with the group sliding out from (or into) the toggle.
+    // The arrow keys shown or folded as wanted or for the completion list.
     private fun showArrows(animate: Boolean) {
         val show = arrowsWanted || arrowsForCompletion
         if (show != arrowsVisible) {
