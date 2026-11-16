@@ -72,7 +72,6 @@ class EditorSettingsFragment : BaseSettingsFragment() {
 
     private var textSizePreference: Preference? = null
     private var autoPairCharsPreference: Preference? = null
-    private var extraKeysPreference: Preference? = null
 
     // the system file picker, for a font from the storage of the device
     private val pickFont = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -108,14 +107,6 @@ class EditorSettingsFragment : BaseSettingsFragment() {
             }
         }
         updateAutoPairsSummary()
-
-        extraKeysPreference = findPreference<Preference>(Constants.PREF_EDITOR_EXTRA_KEYS)?.apply {
-            setOnPreferenceClickListener {
-                ExtraKeysDialog(requireContext(), layoutInflater) { updateExtraKeysSummary() }.show()
-                true
-            }
-        }
-        updateExtraKeysSummary()
 
         textSizePreference = findPreference<Preference>(Constants.PREF_EDITOR_TEXTSIZE)?.apply {
             setOnPreferenceClickListener {
@@ -182,20 +173,6 @@ class EditorSettingsFragment : BaseSettingsFragment() {
             }
         }
         dialog.show()
-    }
-
-    // #endregion
-
-    // #region extra keys
-
-    // the symbols of the row of extra keys, in their order, or "none"
-    private fun updateExtraKeysSummary() {
-        val keys = EditorSettings.getExtraKeys(requireContext())
-        extraKeysPreference?.summary = if (keys.isEmpty()) {
-            getString(R.string.pref_editor_extra_keys_none)
-        } else {
-            keys.joinToString("  ")
-        }
     }
 
     // #endregion
