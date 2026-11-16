@@ -1249,4 +1249,7 @@
     <string name="viewer_failed">无法读取 %1$s：%2$s</string>
     <string name="viewer_too_large">%1$s 太大（%2$s），无法在这里查看：请在编辑器中打开</string>
     <string name="viewer_binary">%1$s 不是文本文件</string>
+    <string name="symbol_action_unsupported">当前编辑器不支持此符号动作</string>
+    <string name="symbol_action_failed">符号动作执行失败</string>
+    <string name="symbol_action_partial_failure">符号动作的部分步骤未能完成</string>
 </resources>
