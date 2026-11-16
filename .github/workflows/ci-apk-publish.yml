@@ -228,6 +228,15 @@ jobs:
           ls -l release-assets
           ls release-assets/*.apk >/dev/null   # Fail early if nothing was produced
 
+      # Keep a run-scoped download as well as the durable GitHub Release assets.
+      - name: Upload APK workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xedit-app-${{ env.BUILD_TYPE }}-${{ github.run_number }}
+          path: release-assets/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Publish to GitHub Releases
         run: |
           TAG="${{ steps.ver.outputs.tag }}"
