@@ -1167,7 +1167,6 @@ class EditorActivity : BaseActivity() {
 
         // other symbols for the row of extra keys
         if (applied == null || applied.extraKeys != settings.extraKeys) {
-            extraKeys?.setKeys(settings.extraKeys)
         }
 
         // another highlight theme, or a new version of the same one (imported again
@@ -2495,10 +2494,8 @@ class EditorActivity : BaseActivity() {
             binding = binding,
             activeEditor = { activeEditor },
             haptic = { vibrator.vibrate(effect) },
-            onSymbol = { symbol -> onSoftKey(symbol) }
         ).apply {
             setColors(extraKeyColors)
-            setKeys(appliedEditorSettings?.extraKeys ?: EditorSettings.getExtraKeys(this@EditorActivity))
         }
     }
 
