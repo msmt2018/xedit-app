@@ -2367,18 +2367,18 @@ class EditorActivity : BaseActivity() {
                             SymbolActionResult.Executed,
                             is SymbolActionResult.Cancelled -> Unit
                             is SymbolActionResult.Unsupported -> {
-                                Toast.makeText(this, "This symbol action is not supported by the active editor.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, getString(R.string.symbol_action_unsupported), Toast.LENGTH_SHORT).show()
                             }
                             is SymbolActionResult.Invalid -> {
                                 Toast.makeText(this, result.reason, Toast.LENGTH_SHORT).show()
                             }
                             is SymbolActionResult.Failed -> {
                                 Log.e("EditorActivity", "Symbol action failed", result.cause)
-                                Toast.makeText(this, result.cause.message ?: "Symbol action failed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, result.cause.message ?: getString(R.string.symbol_action_failed), Toast.LENGTH_SHORT).show()
                             }
                             is SymbolActionResult.PartialFailure -> {
                                 Log.e("EditorActivity", "Symbol composite action partially failed: ${result.cause}")
-                                Toast.makeText(this, "Some steps of the symbol action could not be completed.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, getString(R.string.symbol_action_partial_failure), Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
