@@ -108,6 +108,7 @@ import java.util.Collections
 import java.util.WeakHashMap
 
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 
@@ -2402,8 +2403,55 @@ class EditorActivity : BaseActivity() {
         ).apply {
             onError = { error -> Log.e("EditorActivity", "Symbol manager failed", error) }
         }
+        // The library manager focuses on group/symbol editing and does not
+        // expose a settings destination in its own header. Add an explicit host
+        // navigation row so settings are reachable directly from this page.
+        val managerContainer = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+        }
+        val managerToolbar = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.END or android.view.Gravity.CENTER_VERTICAL
+            setPadding(
+                (12 * resources.displayMetrics.density).toInt(),
+                (8 * resources.displayMetrics.density).toInt(),
+                (12 * resources.displayMetrics.density).toInt(),
+                (4 * resources.displayMetrics.density).toInt()
+            )
+        }
+        val settingsButton = MaterialButton(this).apply {
+            text = getString(R.string.action_settings)
+            isAllCaps = false
+            setIconResource(android.R.drawable.ic_menu_preferences)
+            setOnClickListener {
+                symbolManagerDialog?.dismiss()
+                openSymbolSettings()
+            }
+        }
+        managerToolbar.addView(
+            settingsButton,
+            android.widget.LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+        managerContainer.addView(
+            managerToolbar,
+            android.widget.LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+        managerContainer.addView(
+            screen,
+            android.widget.LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            )
+        )
         val dialog = AlertDialog.Builder(this)
-            .setView(screen)
+            .setView(managerContainer)
             .setPositiveButton(android.R.string.ok, null)
             .create()
         symbolManagerDialog = dialog
