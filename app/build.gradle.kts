@@ -65,6 +65,9 @@ dependencies {
     testImplementation(libs.kotlin.test.junit5)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     // Dependency on a local library module editor
+    // Zero Symbol Input View V2 (requested JitPack coordinate).
+    implementation("com.github.msmt2018:zero-Symbol-input-view:4.1-v2")
+
     implementation(project(":crash"))
     implementation(project(":editor"))
     implementation(project(":document"))
