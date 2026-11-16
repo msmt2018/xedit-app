@@ -1291,4 +1291,7 @@
     <string name="viewer_failed">Cannot read %1$s: %2$s</string>
     <string name="viewer_too_large">%1$s is too large to show here (%2$s): open it in the editor</string>
     <string name="viewer_binary">%1$s is not a text file</string>
+    <string name="symbol_action_unsupported">This symbol action is not supported by the active editor.</string>
+    <string name="symbol_action_failed">Symbol action failed</string>
+    <string name="symbol_action_partial_failure">Some steps of the symbol action could not be completed.</string>
 </resources>
