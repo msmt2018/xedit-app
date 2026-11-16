@@ -173,7 +173,7 @@ import x.editor.app.symbol.createCodeEditorSymbolActionHost
 import com.zerostudio.idea.widget.editor.symbolinput.v2.SymbolDrawerView
 import com.zerostudio.idea.widget.editor.symbolinput.v2.manager.SymbolDrawerManagerScreen
 import com.zerostudio.idea.widget.editor.symbolinput.v2.settings.SymbolDrawerSettingsScreen
-import com.zerostudio.idea.widget.editor.symbolinput.v2.action.SymbolActionResult
+import com.zerostudio.idea.widget.drawer.action.SymbolActionResult
 
 import x.github.module.editor.input.AutoPair
 import x.github.module.editor.input.CommentToggle
